@@ -14,7 +14,7 @@ class StorageServer:
 
     def __init__(self, host: str, username: str, password: str):
         self.ftp = FTP_TLS(host)
-        # self.ftp.set_debuglevel(1)
+        self.ftp.set_debuglevel(1)
         self.ftp.login(username, password)
         self.ftp.prot_p()
 
@@ -74,6 +74,7 @@ class StorageServer:
         self._delete_dir(posixpath.join(self.STORAGE_DIR, path))
 
     def _delete_dir(self, path):
+        """Recursively delete a folder and all files in it."""
         for name in self.ftp.nlst(path):
             try:
                 self.ftp.cwd(name)  # it won't cause an error if it's a folder
@@ -83,11 +84,19 @@ class StorageServer:
 
         self.ftp.rmd(path)
 
+    def clear(self):
+        """Clear the storage."""
+        for name in self.ftp.nlst(self.STORAGE_DIR):
+            try:
+                self.ftp.cwd(name)
+                self._delete_dir(posixpath.join(self.STORAGE_DIR, name))
+            except all_errors:
+                self.ftp.delete(posixpath.join(self.STORAGE_DIR, name))
+
 
 if __name__ == '__main__':
     ss = StorageServer(HOST, USERNAME, PASSWORD)
 
-    ss.make_dir('', 'dir1')
     ss.make_dir('dir1', 'inner_dir')
     ss.make_dir('', 'dir2')
     ss.create_file('dir1/inner_dir', 'file1')
@@ -108,5 +117,8 @@ if __name__ == '__main__':
     print(ss.read_dir('dir2/copies'))
     ss.delete_dir('dir2')
     print(ss.read_dir(''))
+    ss.clear()
+    print(ss.read_dir(''))
+
 
 
