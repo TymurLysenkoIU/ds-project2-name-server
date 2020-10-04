@@ -1,10 +1,10 @@
-from ftplib import FTP_TLS
+from ftplib import FTP_TLS, all_errors
 from io import BytesIO
 import posixpath
 from tempfile import TemporaryFile
 from typing import io
 
-HOST = '172.17.35.45'
+HOST = '172.17.37.20'
 USERNAME = 'ftpuser'
 PASSWORD = 'ftppassword'
 
@@ -66,12 +66,22 @@ class StorageServer:
 
     def make_dir(self, path: str, dirname: str):
         """Make a new directory with the specified path"""
-        self.ftp.cwd(posixpath.join(self.STORAGE_DIR, path))
+        self._change_dir(path)
         self.ftp.mkd(dirname)
 
-    def delete_dir(self, path: str, dirname: str):
+    def delete_dir(self, path: str):
         """Delete a directory with the specified path"""
-        self.ftp.rmd(dirname)
+        self._delete_dir(posixpath.join(self.STORAGE_DIR, path))
+
+    def _delete_dir(self, path):
+        for name in self.ftp.nlst(path):
+            try:
+                self.ftp.cwd(name)  # it won't cause an error if it's a folder
+                self._delete_dir(posixpath.join(path, name))
+            except all_errors:
+                self.ftp.delete(posixpath.join(path, name))
+
+        self.ftp.rmd(path)
 
 
 if __name__ == '__main__':
@@ -96,5 +106,7 @@ if __name__ == '__main__':
     print(ss.get_file_size('dir2/copies', 'text_file.copy'))
     ss.delete_file('dir2/copies', 'text_file.copy2')
     print(ss.read_dir('dir2/copies'))
+    ss.delete_dir('dir2')
+    print(ss.read_dir(''))
 
 
