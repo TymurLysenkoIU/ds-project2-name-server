@@ -4,6 +4,8 @@ import posixpath
 from tempfile import TemporaryFile
 from typing import io
 
+__all__ = ['StorageServer']
+
 HOST = '172.17.37.20'
 USERNAME = 'ftpuser'
 PASSWORD = 'ftppassword'
@@ -69,9 +71,9 @@ class StorageServer:
         self._change_dir(path)
         self.ftp.mkd(dirname)
 
-    def delete_dir(self, path: str):
+    def delete_dir(self, path: str, dirname: str):
         """Delete a directory with the specified path"""
-        self._delete_dir(posixpath.join(self.STORAGE_DIR, path))
+        self._delete_dir(posixpath.join(self.STORAGE_DIR, posixpath.join(path, dirname)))
 
     def _delete_dir(self, path):
         """Recursively delete a folder and all files in it."""
