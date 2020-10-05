@@ -2,11 +2,11 @@ from ftplib import FTP_TLS, all_errors
 from io import BytesIO
 import posixpath
 from tempfile import TemporaryFile
-from typing import io
+from typing import io, List
 
 __all__ = ['StorageServer']
 
-HOST = '172.17.37.20'
+HOST = '172.17.40.213'
 USERNAME = 'ftpuser'
 PASSWORD = 'ftppassword'
 
@@ -16,7 +16,7 @@ class StorageServer:
 
     def __init__(self, host: str, username: str, password: str):
         self.ftp = FTP_TLS(host)
-        self.ftp.set_debuglevel(1)
+        # self.ftp.set_debuglevel(1)
         self.ftp.login(username, password)
         self.ftp.prot_p()
 
@@ -31,7 +31,7 @@ class StorageServer:
     def read_file(self, path: str, filename: str, file: io):
         """Read a file with the specified path."""
         self._change_dir(path)
-        return self.ftp.retrbinary(f'RETR {filename}', file.write)
+        self.ftp.retrbinary(f'RETR {filename}', file.write)
 
     def write_file(self, path: str, filename: str, file: io):
         """Write a file with the specified path."""
@@ -43,7 +43,7 @@ class StorageServer:
         self._change_dir(path)
         self.ftp.delete(filename)
 
-    def get_file_size(self, path: str, filename: str):
+    def get_file_size(self, path: str, filename: str) -> int:
         """Return the size of a file with the specified path, in bytes."""
         self._change_dir(path)
         return self.ftp.size(filename)
@@ -61,7 +61,7 @@ class StorageServer:
         self.copy_file(path, filename, new_path, new_filename)
         self.delete_file(path, filename)
 
-    def read_dir(self, path: str):
+    def read_dir(self, path: str) -> List[str]:
         """Return a list of files which are stored in the directory."""
         self._change_dir(path)
         return list(self.ftp.nlst())
@@ -99,6 +99,7 @@ class StorageServer:
 if __name__ == '__main__':
     ss = StorageServer(HOST, USERNAME, PASSWORD)
 
+    ss.make_dir('', 'dir1')
     ss.make_dir('dir1', 'inner_dir')
     ss.make_dir('', 'dir2')
     ss.create_file('dir1/inner_dir', 'file1')
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     print(ss.get_file_size('dir2/copies', 'text_file.copy'))
     ss.delete_file('dir2/copies', 'text_file.copy2')
     print(ss.read_dir('dir2/copies'))
-    ss.delete_dir('dir2')
+    ss.delete_dir('', 'dir2')
     print(ss.read_dir(''))
     ss.clear()
     print(ss.read_dir(''))
