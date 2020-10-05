@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from typing import List, Dict
+import posixpath
 
 
 HOST = 'localhost:27017'
@@ -76,9 +77,17 @@ class DirectoryTree:
 
     def delete_dir(self, path: str, dirname: str):
         """Delete a directory with the specified path."""
-        pass
+        self._delete_dir(posixpath.join(path, dirname))
 
-    def _get_dir_id_by_path(self, path: str):
+    def _delete_dir(self, path):
+        for document in self.read_dir(path):
+            if document['type'] == 'dir':
+                self._delete_dir(posixpath.join(path, document['name']))
+            elif document['type'] == 'file':
+                self.delete_file(path, document['name'])
+        self.tree.delete_one({'_id': self._get_dir_id_by_path(path)})
+
+    def _get_dir_id_by_path(self, path: str) -> str:
         dirs = [dir_ for dir_ in path.split('/') if dir_]
         cur_dir_id = self.root_id
         for dir_ in dirs:
