@@ -1,9 +1,12 @@
-from directory_tree import DirectoryTree
-from storage_server import StorageServer
 import random
 from typing import io, List, Dict
 from ftplib import all_errors as ftp_errors
 import logging
+
+from .directory_tree import DirectoryTree
+from .storage_server import StorageServer
+
+__all__ = ['Storage']
 
 FTP_HOSTS = ['172.17.35.158', '172.17.33.119', '172.17.43.137']
 FTP_USERS = ['ftpuser', 'ftpuser', 'ftpuser']

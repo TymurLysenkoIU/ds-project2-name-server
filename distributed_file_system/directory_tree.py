@@ -1,7 +1,8 @@
 from pymongo import MongoClient
 from typing import List, Dict
-from storage_server import StorageServer
 import posixpath
+
+from .storage_server import StorageServer
 
 __all__ = ['DirectoryTree']
 
