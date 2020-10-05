@@ -109,7 +109,7 @@ class Storage:
         self.directory_tree.copy_file(path, filename, new_path, new_filename)
         for storage_server in servers:
             try:
-                return storage_server.copy_file(path, filename, new_path, new_filename)
+                storage_server.copy_file(path, filename, new_path, new_filename)
             except ftp_errors as e:
                 logging.error(f'Failed to copy file {filename} on server '
                               f'{storage_server.host}: {e}')
@@ -120,7 +120,7 @@ class Storage:
         self.directory_tree.move_file(path, filename, new_path, new_filename)
         for storage_server in servers:
             try:
-                return storage_server.move_file(path, filename, new_path, new_filename)
+                storage_server.move_file(path, filename, new_path, new_filename)
             except ftp_errors as e:
                 logging.error(f'Failed to move file {filename} on server '
                               f'{storage_server.host}: {e}')
