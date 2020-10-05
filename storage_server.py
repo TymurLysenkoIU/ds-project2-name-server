@@ -6,15 +6,22 @@ from typing import io, List
 
 __all__ = ['StorageServer']
 
-HOST = '172.17.40.213'
-USERNAME = 'ftpuser'
+HOST = '172.17.43.137'
+USER = 'ftpuser'
 PASSWORD = 'ftppassword'
 
 
 class StorageServer:
+    """
+    Class used as client for a FTP server on a storage.
+
+    Arguments:
+        host
+    """
     STORAGE_DIR = '/storage'
 
     def __init__(self, host: str, username: str, password: str):
+        self.host = host
         self.ftp = FTP_TLS(host)
         # self.ftp.set_debuglevel(1)
         self.ftp.login(username, password)
@@ -95,10 +102,14 @@ class StorageServer:
             except all_errors:
                 self.ftp.delete(posixpath.join(self.STORAGE_DIR, name))
 
+    def __repr__(self):
+        return f'StorageServer(host={self.host})'
+
 
 if __name__ == '__main__':
-    ss = StorageServer(HOST, USERNAME, PASSWORD)
+    ss = StorageServer(HOST, USER, PASSWORD)
 
+    ss.clear()
     ss.make_dir('', 'dir1')
     ss.make_dir('dir1', 'inner_dir')
     ss.make_dir('', 'dir2')
@@ -115,6 +126,7 @@ if __name__ == '__main__':
     print(ss.read_dir('dir2/copies'))
     ss.copy_file('dir2', 'text_file.txt', 'dir2/copies', 'text_file.copy')
     ss.move_file('dir2', 'text_file.txt', 'dir2/copies', 'text_file.copy2')
+    print(ss.read_dir('dir2/copies'))
     print(ss.get_file_size('dir2/copies', 'text_file.copy'))
     ss.delete_file('dir2/copies', 'text_file.copy2')
     print(ss.read_dir('dir2/copies'))
@@ -122,6 +134,3 @@ if __name__ == '__main__':
     print(ss.read_dir(''))
     ss.clear()
     print(ss.read_dir(''))
-
-
-

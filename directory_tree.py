@@ -1,7 +1,9 @@
 from pymongo import MongoClient
 from typing import List, Dict
+from storage_server import StorageServer
 import posixpath
 
+__all__ = ['DirectoryTree']
 
 HOST = 'localhost:27017'
 USER = 'admin'
@@ -9,11 +11,18 @@ PASSWORD = 'mongo'
 
 
 class DirectoryTree:
-    def __init__(self, db: MongoClient):
-        self.db = db
-        self.tree = self.db.tree
+    """Class used as client for a MongoDB storing directory tree of a
+    distributed file system.
 
-        print(self.tree.count_documents({}))
+    Arguments:
+        host: str - hostname or IP of MongoDB database
+        username: str - username for MongoDB database
+        password: str - password for MongoDB database
+    """
+    def __init__(self, host: str, username: str, password: str):
+        self.client = MongoClient(host=host, username=username, password=password)
+        self.db = self.client .storage
+        self.tree = self.db.tree
 
         if self.tree.count_documents({}) == 0:  # empty tree
             self.root_id = self.tree.insert_one({'type': 'root'}).inserted_id
@@ -34,6 +43,14 @@ class DirectoryTree:
             'parent': self._get_dir_id_by_path(path),
             'servers': servers,
         })
+
+    def get_file_servers(self, path: str, filename: str) -> List[str]:
+        """Return servers storing the file with the specified path"""
+        return self.tree.find_one({
+            'type': 'file',
+            'name': filename,
+            'parent': self._get_dir_id_by_path(path),
+        })['servers']
 
     def delete_file(self, path: str, filename: str):
         """Delete a file from the tree."""
@@ -100,8 +117,7 @@ class DirectoryTree:
 
 
 if __name__ == '__main__':
-    client = MongoClient(host=HOST, username=USER, password=PASSWORD)
-    dt = DirectoryTree(client.storage)
+    dt = DirectoryTree(HOST, USER, PASSWORD)
     dt.clear()
 
     dt.make_dir('', 'dir1')
