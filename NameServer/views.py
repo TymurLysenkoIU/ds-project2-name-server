@@ -1,7 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from urllib import parse
-from .parse_request import Request_parser
+from .parse_request import parse
 
 @csrf_exempt
 def send_request(request):
@@ -15,8 +15,7 @@ def send_request(request):
         array = [0 for i in range(len(pyDict))]
         for key, val in pyDict.items():
             array[key] = val
-        parser = Request_parser()
-        answer = parser.parse(array)
+        answer = parse(array)
         if pyDict[0] != 'read':
             return HttpResponse(str(answer), status=200)
         else:
@@ -32,6 +31,5 @@ def send_request(request):
         for key, val in pyDict.items():
             array[key] = val
         file = request.FILES['file'].read()
-        parser = Request_parser()
-        answer = parser.parse(array, file)
+        answer = parse(array, file)
         return HttpResponse(str(answer), status=200)

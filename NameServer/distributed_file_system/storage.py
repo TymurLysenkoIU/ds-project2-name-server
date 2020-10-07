@@ -8,7 +8,7 @@ from .storage_server import StorageServer
 
 __all__ = ['Storage']
 
-FTP_HOSTS = ['172.17.35.158', '172.17.33.119', '172.17.43.137']
+FTP_HOSTS = ['172.17.46.180', '172.17.45.155', '172.17.45.250']
 FTP_USERS = ['ftpuser', 'ftpuser', 'ftpuser']
 FTP_PASSWORDS = ['ftppassword', 'ftppassword', 'ftppassword']
 

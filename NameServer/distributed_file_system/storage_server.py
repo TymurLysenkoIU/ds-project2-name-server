@@ -6,7 +6,7 @@ from typing import io, List
 
 __all__ = ['StorageServer']
 
-HOST = '172.17.43.137'
+HOST = '172.17.46.180'
 USER = 'ftpuser'
 PASSWORD = 'ftppassword'
 
@@ -23,11 +23,12 @@ class StorageServer:
     def __init__(self, host: str, username: str, password: str):
         self.host = host
         self.ftp = FTP_TLS(host)
-        # self.ftp.set_debuglevel(1)
+        self.ftp.set_debuglevel(1)
         self.ftp.login(username, password)
         self.ftp.prot_p()
 
     def _change_dir(self, path):
+        path = path.lstrip('/')
         self.ftp.cwd(posixpath.join(self.STORAGE_DIR, path))
 
     def create_file(self, path: str, filename: str):
@@ -110,9 +111,9 @@ if __name__ == '__main__':
     ss = StorageServer(HOST, USER, PASSWORD)
 
     ss.clear()
-    ss.make_dir('', 'dir1')
+    ss.make_dir('/', 'dir1')
     ss.make_dir('dir1', 'inner_dir')
-    ss.make_dir('', 'dir2')
+    ss.make_dir('/', 'dir2')
     ss.create_file('dir1/inner_dir', 'file1')
     ss.create_file('dir1/inner_dir', 'file2')
     ss.create_file('dir1/inner_dir', 'file3')
