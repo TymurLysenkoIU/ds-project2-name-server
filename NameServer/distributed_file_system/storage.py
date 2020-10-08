@@ -8,7 +8,7 @@ from .storage_server import StorageServer
 
 __all__ = ['Storage']
 
-FTP_HOSTS = ['172.17.46.180', '172.17.45.155', '172.17.45.250']
+FTP_HOSTS = ['172.24.206.9', '172.24.200.72', '172.24.198.192']
 FTP_USERS = ['ftpuser', 'ftpuser', 'ftpuser']
 FTP_PASSWORDS = ['ftppassword', 'ftppassword', 'ftppassword']
 
@@ -73,6 +73,7 @@ class Storage:
         for storage_server in servers:
             try:
                 storage_server.read_file(path, filename, file)
+                file.seek(0)
             except ftp_errors as e:
                 logging.error(f'Failed to read file {filename} on server '
                               f'{storage_server.host}: {e}')

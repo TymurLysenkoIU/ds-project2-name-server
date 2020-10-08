@@ -1,6 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from urllib import parse
+from urllib import parse as urlparse
 from .parse_request import parse
 
 @csrf_exempt
@@ -19,17 +19,20 @@ def send_request(request):
         if pyDict[0] != 'read':
             return HttpResponse(str(answer), status=200)
         else:
-            return HttpResponse(answer, enctype="multipart/form-data",
+            return HttpResponse(answer,
                                 status=200)
 
     elif request.method == 'POST':
         print(request)
         url = request.get_full_path()
-        args = dict(parse.parse_qsl(parse.urlsplit(url).query))
+        print(url)
+        args = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
+        print(args)
         pyDict = {int(key): args[key] for key in args}
         array = [0 for i in range(len(pyDict))]
         for key, val in pyDict.items():
             array[key] = val
-        file = request.FILES['file'].read()
+        print(array)
+        file = request.FILES['file']
         answer = parse(array, file)
         return HttpResponse(str(answer), status=200)

@@ -6,7 +6,7 @@ from typing import io, List
 
 __all__ = ['StorageServer']
 
-HOST = '172.17.46.180'
+HOST = '172.24.200.72'
 USER = 'ftpuser'
 PASSWORD = 'ftppassword'
 

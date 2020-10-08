@@ -34,10 +34,12 @@ def parse(args, file=None):
             return None
         if op == 'read':
             with tempfile.TemporaryFile() as fp:
+                print("args:", *(args[1:]), fp)
                 storage.read_file(*(args[1:]), fp)
-                return fp
+                return fp.read()
         if op == 'write':
-            storage.read_file(*(args[1:]), file)
+            print('args:', *(args[1:-1]), file)
+            storage.write_file(*(args[1:-1]), file)
             return None
     except:
         return "The query can not be executed!"
