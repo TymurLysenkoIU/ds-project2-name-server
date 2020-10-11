@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+from os import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'dw2&_5kzulrn5mo$sjyay^oz*fjklr+d^i5396fd2adi!7x4wf'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -118,7 +119,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # MongoDB database
-MONGO_HOST = '192.168.31.156:27017'
+MONGO_HOST = environ.get("MONGO_HOST", "192.168.31.156:27017")
 MONGO_USER = 'admin'
 MONGO_PASSWORD = 'mongo'
 

@@ -1,9 +1,14 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from urllib import parse as urlparse
+import logging
+import sys
+
 from .parse_request import parse
 from .distributed_file_system import Storage
 from .helpers import get_client_ip
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format='%(levelname)s: %(message)s')
 
 @csrf_exempt
 def send_request(request):
@@ -41,7 +46,8 @@ def send_request(request):
 
 
 def connect_storage_server(request):
+    ip = get_client_ip(request)
     storage = Storage()
-    storage.add_storage_server(get_client_ip(request))
-    print(storage.storage_servers)
+    storage.add_storage_server(ip)
+    logging.info(f'A new storage server has been added: {ip}')
     return HttpResponse(status=202)
