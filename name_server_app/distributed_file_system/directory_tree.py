@@ -2,11 +2,9 @@ from pymongo import MongoClient
 from typing import List, Dict
 import posixpath
 
-from .storage_server import StorageServer
-
 __all__ = ['DirectoryTree', 'InvalidPathError', 'NoSuchFileError', 'NoSuchDirectoryError']
 
-HOST = 'localhost:27017'
+HOST = '192.168.31.156:27017'
 USER = 'admin'
 PASSWORD = 'mongo'
 
@@ -119,6 +117,18 @@ class DirectoryTree:
         """Delete a directory with the specified path."""
         self._delete_dir(posixpath.join(path, dirname))
 
+    def as_list(self) -> List[Dict[str, str]]:
+        """Return directory tree as list of dicts {'path': ..., 'dirname': ...}"""
+        dir_list = []
+        self._traverse('/', dir_list)
+        return dir_list
+
+    def _traverse(self, cur_path: str, dir_list: List[Dict[str, str]]):
+        for document in self.read_dir(cur_path):
+            if document['type'] == 'dir':
+                dir_list.append({'path': cur_path, 'dirname': document['name']})
+                self._traverse(posixpath.join(cur_path, document['name']), dir_list)
+
     def _delete_dir(self, path):
         for document in self.read_dir(path):
             if document['type'] == 'dir':
@@ -158,6 +168,7 @@ if __name__ == '__main__':
     dt.make_dir('dir2', 'copies')
     dt.copy_file('dir2', 'text_file.txt', 'dir2/copies', 'text_file.copy')
     dt.move_file('dir2', 'text_file.txt', 'dir2/copies', 'text_file.copy2')
+    print(dt.as_list())
     print(dt.read_dir('dir2/copies'))
     dt.delete_file('dir2/copies', 'text_file.copy2')
     print(dt.read_dir('dir2/copies'))

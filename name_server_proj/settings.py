@@ -127,3 +127,6 @@ MONGO_PASSWORD = 'mongo'
 FTP_USERNAME = 'ftpuser'
 FTP_PASSWORD = 'ftp-pass'
 
+# Timeout for PING request to a storage server, in seconds
+REQUEST_TIMEOUT = 1
+

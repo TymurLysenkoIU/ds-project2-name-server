@@ -7,12 +7,17 @@ import sys
 from name_server_proj.settings import MONGO_HOST, MONGO_USER, MONGO_PASSWORD, FTP_USERNAME, FTP_PASSWORD
 from .directory_tree import DirectoryTree
 from .storage_server import StorageServer
+from ..helpers import ping
 
-__all__ = ['Storage']
+__all__ = ['Storage', 'NoServersAvailable']
 
 FTP_HOSTS = ['192.168.31.157', '192.168.31.158', '192.168.31.159']
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format='%(levelname)s: %(message)s')
+
+
+class NoServersAvailable(Exception):
+    pass
 
 
 class Storage(object):
@@ -30,11 +35,13 @@ class Storage(object):
         self.storage_servers = []
 
     def _choose_storage_servers(self) -> List[str]:
-        # TODO: check if servers are available
-        if len(self.storage_servers) > 2:
-            return random.sample(self.storage_servers, 2)
+        servers = [server for server in self.storage_servers if ping(server)]
+        if len(servers) == 0:
+            raise NoServersAvailable('No storage servers are available.')
+        if len(servers) > 2:
+            return random.sample(servers, 2)
         else:
-            return self.storage_servers
+            return servers
 
     def _get_file_servers(self, path: str, filename: str) -> List[str]:
         return self.directory_tree.get_file_servers(path, filename)
@@ -54,6 +61,15 @@ class Storage(object):
         """Add storage server to the distributed file system."""
         if server not in self.storage_servers:
             self.storage_servers.append(server)
+
+        try:
+            storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
+            storage_server.clear()
+        except ftp_errors as e:
+            logging.error(f'Failed to clear the storage on server '
+                          f'{server}: {e}')
+
+        self.create_dirs(server)
 
     def create_file(self, path: str, filename: str):
         """Create an empty file with the specified path."""
@@ -170,6 +186,16 @@ class Storage(object):
                 storage_server.delete_dir(path, dirname)
             except ftp_errors as e:
                 logging.error(f'Failed to delete directory {dirname} on server '
+                              f'{server}: {e}')
+
+    def create_dirs(self, server: str):
+        """Create directories from the directory tree on the specified storage server."""
+        storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
+        for dir_dict in self.directory_tree.as_list():
+            try:
+                storage_server.make_dir(dir_dict['path'], dir_dict['dirname'])
+            except ftp_errors as e:
+                logging.error(f'Failed to make directory {dir_dict["dirname"]} on server '
                               f'{server}: {e}')
 
 
