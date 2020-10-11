@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class NameserverConfig(AppConfig):
-    name = 'NameServer'
+    name = 'name_server_app'

@@ -43,4 +43,5 @@ def send_request(request):
 def connect_storage_server(request):
     storage = Storage()
     storage.add_storage_server(get_client_ip(request))
+    print(storage.storage_servers)
     return HttpResponse(status=202)

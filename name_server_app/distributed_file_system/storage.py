@@ -3,6 +3,7 @@ from typing import io, List, Dict
 from ftplib import all_errors as ftp_errors
 import logging
 
+from name_server_proj.settings import MONGO_HOST, MONGO_USER, MONGO_PASSWORD, FTP_USERNAME, FTP_PASSWORD
 from .directory_tree import DirectoryTree
 from .storage_server import StorageServer
 
@@ -10,19 +11,28 @@ __all__ = ['Storage']
 
 FTP_HOSTS = ['192.168.31.157', '192.168.31.158', '192.168.31.159']
 
-FTP_USERNAME = 'ftpuser'
-FTP_PASSWORD = 'ftp-pass'
 
-MONGO_HOST = 'localhost:27017'
-MONGO_USER = 'admin'
-MONGO_PASSWORD = 'mongo'
+class Storage(object):
+    """Singleton class representing storage of a distributed file system."""
 
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(Storage, cls).__new__(cls)
+        return cls.instance
 
-class Storage:
-    """Class representing storage of a distributed file system."""
     def __init__(self):
         self.directory_tree = DirectoryTree(MONGO_HOST, MONGO_USER, MONGO_PASSWORD)
-        self.storage_servers = FTP_HOSTS.copy()
+        self.storage_servers = []
+
+    def _choose_storage_servers(self) -> List[str]:
+        # TODO: check if servers are available
+        if len(self.storage_servers) > 2:
+            return random.sample(self.storage_servers, 2)
+        else:
+            return self.storage_servers
+
+    def _get_file_servers(self, path: str, filename: str) -> List[str]:
+        return self.directory_tree.get_file_servers(path, filename)
 
     def clear(self):
         """Clear the storage."""
@@ -35,12 +45,10 @@ class Storage:
                 logging.error(f'Failed to clear the storage on server '
                               f'{server}: {e}')
 
-    def _choose_storage_servers(self) -> List[str]:
-        # TODO: check if servers are available
-        return random.sample(self.storage_servers, 2)
-
-    def _get_file_servers(self, path: str, filename: str) -> List[str]:
-        return self.directory_tree.get_file_servers(path, filename)
+    def add_storage_server(self, server: str):
+        """Add storage server to the distributed file system."""
+        if server not in self.storage_servers:
+            self.storage_servers.append(server)
 
     def create_file(self, path: str, filename: str):
         """Create an empty file with the specified path."""
