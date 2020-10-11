@@ -22,14 +22,14 @@ class DirectoryTree:
     """
     def __init__(self, host: str, username: str, password: str):
         self.client = MongoClient(host=host, username=username, password=password)
-        self.db = self.client .storage
+        self.db = self.client.storage
         self.tree = self.db.tree
 
         if self.tree.count_documents({}) == 0:  # empty tree
             self.root_id = self.tree.insert_one({'type': 'root'}).inserted_id
         else:
             self.root_id = self.tree.find_one({
-                'type': {'$ne': 'root'}
+                'type': 'root'
             })['_id']
 
     def clear(self):
