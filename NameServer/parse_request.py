@@ -21,25 +21,23 @@ operations = {
 def parse(args, file=None):
     op = args[0]
     try:
-        func = operations[op]
-        print(*(args[1:]))
-        answer = func(*(args[1:]))
-        return answer
-    except:
-        pass
-
-    try:
-        if op == 'init':
-            storage.clear()
-            return None
-        if op == 'read':
-            with tempfile.TemporaryFile() as fp:
-                print("args:", *(args[1:]), fp)
-                storage.read_file(*(args[1:]), fp)
-                return fp.read()
-        if op == 'write':
-            print('args:', *(args[1:-1]), file)
-            storage.write_file(*(args[1:-1]), file)
-            return None
+        if op in operations:
+            func = operations[op]
+            print(*(args[1:]))
+            answer = func(*(args[1:]))
+            return answer
+        else:
+            if op == 'init':
+                storage.clear()
+                return None
+            if op == 'read':
+                with tempfile.TemporaryFile() as fp:
+                    print("args:", *(args[1:]), fp)
+                    storage.read_file(*(args[1:]), fp)
+                    return fp.read()
+            if op == 'write':
+                print('args:', *(args[1:-1]), file)
+                storage.write_file(*(args[1:-1]), file)
+                return None
     except:
         return "The query can not be executed!"

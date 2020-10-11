@@ -1,4 +1,4 @@
-from ftplib import FTP_TLS, all_errors
+from ftplib import FTP, all_errors
 from io import BytesIO
 import posixpath
 from tempfile import TemporaryFile
@@ -6,9 +6,9 @@ from typing import io, List
 
 __all__ = ['StorageServer']
 
-HOST = '172.24.200.72'
+HOST = '192.168.31.159'
 USER = 'ftpuser'
-PASSWORD = 'ftppassword'
+PASSWORD = 'ftp-pass'
 
 
 class StorageServer:
@@ -18,14 +18,14 @@ class StorageServer:
     Arguments:
         host
     """
-    STORAGE_DIR = '/storage'
+    STORAGE_DIR = '/'
 
     def __init__(self, host: str, username: str, password: str):
         self.host = host
-        self.ftp = FTP_TLS(host)
+        self.ftp = FTP(host)
+        self.ftp.set_pasv(False)
         self.ftp.set_debuglevel(1)
         self.ftp.login(username, password)
-        self.ftp.prot_p()
 
     def _change_dir(self, path):
         path = path.lstrip('/')

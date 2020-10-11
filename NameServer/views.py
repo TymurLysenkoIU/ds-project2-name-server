@@ -2,6 +2,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from urllib import parse as urlparse
 from .parse_request import parse
+from .distributed_file_system import Storage
+from .helpers import get_client_ip
 
 @csrf_exempt
 def send_request(request):
@@ -36,3 +38,9 @@ def send_request(request):
         file = request.FILES['file']
         answer = parse(array, file)
         return HttpResponse(str(answer), status=200)
+
+
+def connect_storage_server(request):
+    storage = Storage()
+    storage.add_storage_server(get_client_ip(request))
+    return HttpResponse(status=202)

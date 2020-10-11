@@ -8,9 +8,10 @@ from .storage_server import StorageServer
 
 __all__ = ['Storage']
 
-FTP_HOSTS = ['172.24.206.9', '172.24.200.72', '172.24.198.192']
-FTP_USERS = ['ftpuser', 'ftpuser', 'ftpuser']
-FTP_PASSWORDS = ['ftppassword', 'ftppassword', 'ftppassword']
+FTP_HOSTS = ['192.168.31.157', '192.168.31.158', '192.168.31.159']
+
+FTP_USERNAME = 'ftpuser'
+FTP_PASSWORD = 'ftp-pass'
 
 MONGO_HOST = 'localhost:27017'
 MONGO_USER = 'admin'
@@ -21,62 +22,62 @@ class Storage:
     """Class representing storage of a distributed file system."""
     def __init__(self):
         self.directory_tree = DirectoryTree(MONGO_HOST, MONGO_USER, MONGO_PASSWORD)
-        self.storage_servers = [StorageServer(ftp_host, ftp_user, ftp_password)
-                                for ftp_host, ftp_user, ftp_password
-                                in zip(FTP_HOSTS, FTP_USERS, FTP_PASSWORDS)]
+        self.storage_servers = FTP_HOSTS.copy()
 
     def clear(self):
         """Clear the storage."""
         self.directory_tree.clear()
-        for storage_server in self.storage_servers:
+        for server in self.storage_servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.clear()
             except ftp_errors as e:
                 logging.error(f'Failed to clear the storage on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
-    def _choose_storage_servers(self):
+    def _choose_storage_servers(self) -> List[str]:
+        # TODO: check if servers are available
         return random.sample(self.storage_servers, 2)
 
-    def _get_file_servers(self, path: str, filename: str) -> List[StorageServer]:
-        servers = self.directory_tree.get_file_servers(path, filename)
-        return [server for server in self.storage_servers if server.host in servers]
+    def _get_file_servers(self, path: str, filename: str) -> List[str]:
+        return self.directory_tree.get_file_servers(path, filename)
 
     def create_file(self, path: str, filename: str):
         """Create an empty file with the specified path."""
         servers = self._choose_storage_servers()
-        self.directory_tree.create_file(path, filename,
-                                        [server.host for server in servers])
-        for storage_server in servers:
+        self.directory_tree.create_file(path, filename, servers)
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.create_file(path, filename)
             except ftp_errors as e:
                 logging.error(f'Failed to create file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
     def write_file(self, path: str, filename: str, file: io):
         """Write a file with the specified path."""
         servers = self._choose_storage_servers()
-        self.directory_tree.create_file(path, filename,
-                                        [server.host for server in servers])
-        for storage_server in servers:
+        self.directory_tree.create_file(path, filename, servers)
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.write_file(path, filename, file)
                 file.seek(0)
             except ftp_errors as e:
                 logging.error(f'Failed to write file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
     def read_file(self, path: str, filename: str, file: io):
         """Read a file with the specified path."""
         servers = self._get_file_servers(path, filename)
-        for storage_server in servers:
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.read_file(path, filename, file)
                 file.seek(0)
             except ftp_errors as e:
                 logging.error(f'Failed to read file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
             else:
                 return
         logging.error(f'Failed to read file {filename}')
@@ -84,24 +85,25 @@ class Storage:
     def delete_file(self, path: str, filename: str):
         """Delete a file with the specified path."""
         servers = self._get_file_servers(path, filename)
-        print(servers)
         self.directory_tree.delete_file(path, filename)
-        for storage_server in servers:
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.delete_file(path, filename)
             except ftp_errors as e:
                 logging.error(f'Failed to delete file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
     def get_file_size(self, path: str, filename: str) -> int:
         """Return the size of a file with the specified path, in bytes."""
         servers = self._get_file_servers(path, filename)
-        for storage_server in servers:
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 size = storage_server.get_file_size(path, filename)
             except ftp_errors as e:
                 logging.error(f'Failed to get size of file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
             else:
                 return size
         logging.error(f'Failed to get size of file {filename}')
@@ -111,23 +113,25 @@ class Storage:
         """Copy a file with the specified path to the new path."""
         servers = self._get_file_servers(path, filename)
         self.directory_tree.copy_file(path, filename, new_path, new_filename)
-        for storage_server in servers:
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.copy_file(path, filename, new_path, new_filename)
             except ftp_errors as e:
                 logging.error(f'Failed to copy file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
     def move_file(self, path: str, filename: str, new_path: str, new_filename: str = None):
         """Move a file with the specified path to the new path."""
         servers = self._get_file_servers(path, filename)
         self.directory_tree.move_file(path, filename, new_path, new_filename)
-        for storage_server in servers:
+        for server in servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.move_file(path, filename, new_path, new_filename)
             except ftp_errors as e:
                 logging.error(f'Failed to move file {filename} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
     def read_dir(self, path: str) -> List[Dict[str, str]]:
         """Return a list of files which are stored in the directory."""
@@ -136,22 +140,24 @@ class Storage:
     def make_dir(self, path: str, dirname: str):
         """Make a new directory with the specified path"""
         self.directory_tree.make_dir(path, dirname)
-        for storage_server in self.storage_servers:
+        for server in self.storage_servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.make_dir(path, dirname)
             except ftp_errors as e:
                 logging.error(f'Failed to make directory {dirname} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
     def delete_dir(self, path: str, dirname: str):
         """Delete a directory with the specified path"""
         self.directory_tree.delete_dir(path, dirname)
-        for storage_server in self.storage_servers:
+        for server in self.storage_servers:
             try:
+                storage_server = StorageServer(server, FTP_USERNAME, FTP_PASSWORD)
                 storage_server.delete_dir(path, dirname)
             except ftp_errors as e:
                 logging.error(f'Failed to delete directory {dirname} on server '
-                              f'{storage_server.host}: {e}')
+                              f'{server}: {e}')
 
 
 if __name__ == '__main__':
