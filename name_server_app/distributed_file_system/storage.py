@@ -2,6 +2,7 @@ import random
 from typing import io, List, Dict
 from ftplib import all_errors as ftp_errors
 import logging
+import sys
 
 from name_server_proj.settings import MONGO_HOST, MONGO_USER, MONGO_PASSWORD, FTP_USERNAME, FTP_PASSWORD
 from .directory_tree import DirectoryTree
@@ -10,6 +11,8 @@ from .storage_server import StorageServer
 __all__ = ['Storage']
 
 FTP_HOSTS = ['192.168.31.157', '192.168.31.158', '192.168.31.159']
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format='%(levelname)s: %(message)s')
 
 
 class Storage(object):
@@ -21,7 +24,9 @@ class Storage(object):
         return cls.instance
 
     def __init__(self):
+        logging.info('Connecting to MongoDB.')
         self.directory_tree = DirectoryTree(MONGO_HOST, MONGO_USER, MONGO_PASSWORD)
+        logging.info('Successfully connected to MongoDB.')
         self.storage_servers = []
 
     def _choose_storage_servers(self) -> List[str]:

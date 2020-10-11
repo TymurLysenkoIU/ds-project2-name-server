@@ -4,11 +4,23 @@ import posixpath
 
 from .storage_server import StorageServer
 
-__all__ = ['DirectoryTree']
+__all__ = ['DirectoryTree', 'InvalidPathError', 'NoSuchFileError', 'NoSuchDirectoryError']
 
 HOST = 'localhost:27017'
 USER = 'admin'
 PASSWORD = 'mongo'
+
+
+class InvalidPathError(Exception):
+    pass
+
+
+class NoSuchDirectoryError(InvalidPathError):
+    pass
+
+
+class NoSuchFileError(InvalidPathError):
+    pass
 
 
 class DirectoryTree:
@@ -34,7 +46,9 @@ class DirectoryTree:
 
     def clear(self):
         """Clear the directory tree."""
-        self.tree.delete_many({})
+        self.tree.delete_many({
+            'type': {'$ne': 'root'}
+        })
 
     def create_file(self, path: str, filename: str, servers: List[str]):
         """Create a file in the tree and index servers storing this file."""
@@ -47,29 +61,37 @@ class DirectoryTree:
 
     def get_file_servers(self, path: str, filename: str) -> List[str]:
         """Return servers storing the file with the specified path"""
-        return self.tree.find_one({
-            'type': 'file',
-            'name': filename,
-            'parent': self._get_dir_id_by_path(path),
-        })['servers']
+        try:
+            return self.tree.find_one({
+                'type': 'file',
+                'name': filename,
+                'parent': self._get_dir_id_by_path(path),
+            })['servers']
+        except TypeError:
+            raise NoSuchFileError(f'There is no such file: {posixpath.join(path, filename)}')
 
     def delete_file(self, path: str, filename: str):
         """Delete a file from the tree."""
-        self.tree.delete_one({
+        result = self.tree.delete_one({
             'type': 'file',
             'name': filename,
             'parent': self._get_dir_id_by_path(path),
         })
+        if result.deleted_count == 0:
+            raise NoSuchFileError(f'There is no such file: {posixpath.join(path, filename)}')
 
     def copy_file(self, path: str, filename: str, new_path: str, new_filename: str = None):
         """Copy a file with the specified path to the new path."""
-        new_filename = new_filename or filename
-        servers = self.tree.find_one({
-            'type': 'file',
-            'name': filename,
-            'parent': self._get_dir_id_by_path(path),
-        })['servers']
-        self.create_file(new_path, new_filename, servers)
+        try:
+            new_filename = new_filename or filename
+            servers = self.tree.find_one({
+                'type': 'file',
+                'name': filename,
+                'parent': self._get_dir_id_by_path(path),
+            })['servers']
+            self.create_file(new_path, new_filename, servers)
+        except TypeError:
+            raise NoSuchFileError(f'There is no such file: {posixpath.join(path, filename)}')
 
     def move_file(self, path: str, filename: str, new_path: str, new_filename: str = None):
         """Move a file with the specified path to the new path."""
@@ -85,7 +107,7 @@ class DirectoryTree:
         })
 
     def read_dir(self, path: str) -> List[Dict[str, str]]:
-        """Return list of files and directories stored in a file."""
+        """Return list of files and directories stored in the directory."""
         return [
             {key: document[key] for key in ('type', 'name')}
             for document in self.tree.find({
@@ -106,15 +128,18 @@ class DirectoryTree:
         self.tree.delete_one({'_id': self._get_dir_id_by_path(path)})
 
     def _get_dir_id_by_path(self, path: str) -> str:
-        dirs = [dir_ for dir_ in path.split('/') if dir_]
-        cur_dir_id = self.root_id
-        for dir_ in dirs:
-            cur_dir_id = self.tree.find_one({
-                'type': 'dir',
-                'name': dir_,
-                'parent': cur_dir_id
-            })['_id']
-        return cur_dir_id
+        try:
+            dirs = [dir_ for dir_ in path.split('/') if dir_]
+            cur_dir_id = self.root_id
+            for dir_ in dirs:
+                cur_dir_id = self.tree.find_one({
+                    'type': 'dir',
+                    'name': dir_,
+                    'parent': cur_dir_id
+                })['_id']
+            return cur_dir_id
+        except TypeError:
+            raise NoSuchDirectoryError(f'There is no such directory: {path}')
 
 
 if __name__ == '__main__':

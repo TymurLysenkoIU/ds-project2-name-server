@@ -39,5 +39,6 @@ def parse(args, file=None):
                 print('args:', *(args[1:-1]), file)
                 storage.write_file(*(args[1:-1]), file)
                 return None
-    except:
+    except Exception as e:
+        print(repr(e))
         return "The query can not be executed!"
