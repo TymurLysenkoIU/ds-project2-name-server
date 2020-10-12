@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
     'name_server_app',
 ]
 
@@ -117,6 +116,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = path.join(BASE_DIR, "static")
 
 # MongoDB database
 MONGO_HOST = environ.get("MONGO_HOST", "192.168.31.156:27017")
@@ -127,9 +127,5 @@ MONGO_PASSWORD = environ.get("MONGO_PASS", 'mongo')
 FTP_USERNAME = environ.get("FTP_USER", 'ftpuser')
 FTP_PASSWORD = environ.get("FTP_PASS", 'ftp-pass')
 
-# Storage server port
-STORAGE_SERVER_PORT = '80'
-
 # Timeout for PING request to a storage server, in seconds
 REQUEST_TIMEOUT = environ.get("STORAGE_REQUEST_TIMEOUT", 2)
-
