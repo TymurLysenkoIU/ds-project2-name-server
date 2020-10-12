@@ -46,6 +46,7 @@ def send_request(request):
 
 
 def connect_storage_server(request):
+    # TODO: get ip and port from query parameters
     ip = get_client_ip(request)
     storage = Storage()
     storage.add_storage_server(ip)
