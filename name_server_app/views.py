@@ -50,4 +50,5 @@ def connect_storage_server(request):
     storage = Storage()
     storage.add_storage_server(ip)
     logging.info(f'A new storage server has been added: {ip}')
+    logging.info(f'Size available in the distributed storage: {storage.get_available_space()}')
     return HttpResponse(status=202)

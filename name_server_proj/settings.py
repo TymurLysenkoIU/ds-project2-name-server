@@ -127,6 +127,9 @@ MONGO_PASSWORD = 'mongo'
 FTP_USERNAME = 'ftpuser'
 FTP_PASSWORD = 'ftp-pass'
 
+# Storage server port
+STORAGE_SERVER_PORT = '80'
+
 # Timeout for PING request to a storage server, in seconds
-REQUEST_TIMEOUT = 1
+REQUEST_TIMEOUT = 2
 

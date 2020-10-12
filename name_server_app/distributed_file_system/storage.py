@@ -7,7 +7,7 @@ import sys
 from name_server_proj.settings import MONGO_HOST, MONGO_USER, MONGO_PASSWORD, FTP_USERNAME, FTP_PASSWORD
 from .directory_tree import DirectoryTree
 from .storage_server import StorageServer
-from ..helpers import ping
+from ..helpers import ping, request_space_available
 
 __all__ = ['Storage', 'NoServersAvailable']
 
@@ -26,16 +26,19 @@ class Storage(object):
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(Storage, cls).__new__(cls)
+            logging.info('Connecting to MongoDB.')
+            cls.instance.directory_tree = DirectoryTree(MONGO_HOST, MONGO_USER, MONGO_PASSWORD)
+            logging.info('Successfully connected to MongoDB.')
+            cls.instance.storage_servers = []
         return cls.instance
 
-    def __init__(self):
-        logging.info('Connecting to MongoDB.')
-        self.directory_tree = DirectoryTree(MONGO_HOST, MONGO_USER, MONGO_PASSWORD)
-        logging.info('Successfully connected to MongoDB.')
-        self.storage_servers = []
+    def _available_servers(self) -> List[str]:
+        """Return available servers."""
+        return [server for server in self.storage_servers if ping(server)]
 
     def _choose_storage_servers(self) -> List[str]:
-        servers = [server for server in self.storage_servers if ping(server)]
+        """Choose storage server for a new file."""
+        servers = self._available_servers()
         if len(servers) == 0:
             raise NoServersAvailable('No storage servers are available.')
         if len(servers) > 2:
@@ -44,7 +47,15 @@ class Storage(object):
             return servers
 
     def _get_file_servers(self, path: str, filename: str) -> List[str]:
+        """Return file servers storing the specified file."""
         return self.directory_tree.get_file_servers(path, filename)
+
+    def get_available_space(self):
+        """Returns how many bytes are available in storage."""
+        total = 0
+        for server in self._available_servers():
+            total += request_space_available(server)
+        return total // 2
 
     def clear(self):
         """Clear the storage."""
