@@ -27,10 +27,3 @@ def request_space_available(host: str) -> int:
         return requests.get(f'http://{host}:{STORAGE_SERVER_PORT}/info/space', timeout=REQUEST_TIMEOUT).json()['bytes_available']
     except Exception:
         return 0
-
-
-if __name__ == '__main__':
-    host = '192.168.31.157'
-    print(requests.get(f'http://{host}/info/space', timeout=REQUEST_TIMEOUT))
-    print(requests.get(f'http://{host}/info/space', timeout=REQUEST_TIMEOUT).json())
-    print(requests.get(f'http://{host}/info/space', timeout=REQUEST_TIMEOUT).json()['bytes_available'])
