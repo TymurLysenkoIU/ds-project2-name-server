@@ -13,17 +13,17 @@ def get_client_ip(request) -> str:
     return ip
 
 
-def ping(host: str) -> bool:
+def ping(host: str, port=STORAGE_SERVER_PORT) -> bool:
     """Check if the specified host is available"""
     try:
-        return requests.get(f'http://{host}:{STORAGE_SERVER_PORT}/ping', timeout=REQUEST_TIMEOUT).status_code == 200
+        return requests.get(f'http://{host}:{port}/ping', timeout=REQUEST_TIMEOUT).status_code == 200
     except requests.RequestException:
         return False
 
 
-def request_space_available(host: str) -> int:
+def request_space_available(host: str, port=STORAGE_SERVER_PORT) -> int:
     """Return how many bytes are available at storage directory."""
     try:
-        return requests.get(f'http://{host}:{STORAGE_SERVER_PORT}/info/space', timeout=REQUEST_TIMEOUT).json()['bytes_available']
+        return requests.get(f'http://{host}:{port}/info/space', timeout=REQUEST_TIMEOUT).json()['bytes_available']
     except Exception:
         return 0

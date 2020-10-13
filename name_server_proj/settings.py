@@ -131,5 +131,5 @@ FTP_PASSWORD = environ.get("FTP_PASS", 'ftp-pass')
 STORAGE_SERVER_PORT = environ.get("STORAGE_SERVER_PORT", '80')
 
 # Timeout for PING request to a storage server, in seconds
-REQUEST_TIMEOUT = environ.get("STORAGE_REQUEST_TIMEOUT", 2)
+REQUEST_TIMEOUT = int(environ.get("STORAGE_REQUEST_TIMEOUT", 2))
 

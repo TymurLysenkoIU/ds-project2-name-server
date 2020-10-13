@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 from urllib import parse as urlparse
 import logging
@@ -46,10 +46,14 @@ def send_request(request):
 
 
 def connect_storage_server(request):
-    # TODO: get ip and port from query parameters
-    ip = get_client_ip(request)
-    storage = Storage()
-    storage.add_storage_server(ip)
-    logging.info(f'A new storage server has been added: {ip}')
-    logging.info(f'Size available in the distributed storage: {storage.get_available_space()}')
-    return HttpResponse(status=202)
+    if request.method == 'GET':
+        ip = request.GET.get("addr")
+        port = request.GET.get("port")  # NOT USED FOR NOW
+
+        storage = Storage()
+        storage.add_storage_server(ip)
+        logging.info(f'A new storage server has been added: {ip}')
+        logging.info(f'Size available in the distributed storage: {storage.get_available_space()}')
+        return HttpResponse(status=202)
+    else:
+        return HttpResponseNotAllowed("GET")

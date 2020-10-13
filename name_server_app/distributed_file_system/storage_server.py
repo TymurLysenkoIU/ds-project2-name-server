@@ -23,7 +23,7 @@ class StorageServer:
     def __init__(self, host: str, username: str, password: str):
         self.host = host
         self.ftp = FTP(host)
-        self.ftp.set_pasv(False)
+        # self.ftp.set_pasv(False)
         # self.ftp.set_debuglevel(1)
         self.ftp.login(username, password)
 
