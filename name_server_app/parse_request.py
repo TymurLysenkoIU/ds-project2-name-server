@@ -1,4 +1,4 @@
-from .distributed_file_system import Storage
+from .distributed_file_system import Storage, InvalidPathError, NoServersAvailable
 import tempfile
 
 storage = Storage()
@@ -29,7 +29,7 @@ def parse(args, file=None):
         else:
             if op == 'init':
                 storage.clear()
-                return None
+                return str(storage.get_available_space())
             if op == 'read':
                 with tempfile.TemporaryFile() as fp:
                     print("args:", *(args[1:]), fp)
@@ -39,6 +39,10 @@ def parse(args, file=None):
                 print('args:', *(args[1:-1]), file)
                 storage.write_file(*(args[1:-1]), file)
                 return None
-    except Exception as e:
-        print(repr(e))
-        return "The query can not be executed!"
+    except InvalidPathError as e:
+        return f'The query can not be executed! {e}'
+    except NoServersAvailable as e:
+        return f'The query can not be executed! {e}'
+    except Exception:
+        print(repr(Exception))
+        return f'The query can not be executed!'
